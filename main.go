@@ -24,10 +24,17 @@ func (lb *loadBalancer) nextBackend() *url.URL {
 	return be
 }
 
+func (lb *loadBalancer) errorHandler(w http.ResponseWriter, r *http.Request, err error) {
+	fmt.Println("Error fulfilling request on server idx:", lb.current)
+
+	lb.ServeHTTP(w, r)
+}
+
 func (lb *loadBalancer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	backend := lb.nextBackend()
 
 	proxy := httputil.NewSingleHostReverseProxy(backend)
+	proxy.ErrorHandler = lb.errorHandler
 	proxy.ServeHTTP(w, r)
 }
 
