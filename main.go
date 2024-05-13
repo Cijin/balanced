@@ -7,8 +7,6 @@ import (
 	"net/url"
 )
 
-const port = "8080"
-
 type loadBalancer struct {
 	backends []*url.URL
 	current  int
@@ -31,6 +29,9 @@ func main() {
 		{Scheme: "http", Host: "localhost:8081"},
 		{Scheme: "http", Host: "localhost:8082"},
 	}
+
+	go startServer("8081")
+	go startServer("8082")
 
 	lb := &loadBalancer{
 		backends: backends,
