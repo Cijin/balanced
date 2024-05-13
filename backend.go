@@ -17,7 +17,7 @@ func startServer(port string) {
 		log.Println(headers)
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Hello from the backend\n"))
+		w.Write([]byte(fmt.Sprintf("Hello from the backend:%s\n", port)))
 	})
 
 	server := http.Server{

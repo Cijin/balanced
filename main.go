@@ -7,6 +7,10 @@ import (
 	"net/url"
 )
 
+var ports = []string{
+	"8081", "8082", "8083", "8084", "8085",
+}
+
 type loadBalancer struct {
 	backends []*url.URL
 	current  int
@@ -14,7 +18,10 @@ type loadBalancer struct {
 
 func (lb *loadBalancer) nextBackend() *url.URL {
 	// change to round robin
-	return lb.backends[(lb.current+1)%len(lb.backends)]
+	be := lb.backends[lb.current]
+	lb.current = (lb.current + 1) % len(lb.backends)
+
+	return be
 }
 
 func (lb *loadBalancer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -25,13 +32,13 @@ func (lb *loadBalancer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	backends := []*url.URL{
-		{Scheme: "http", Host: "localhost:8081"},
-		{Scheme: "http", Host: "localhost:8082"},
-	}
+	var backends []*url.URL
+	for _, port := range ports {
+		backends = append(backends, &url.URL{Scheme: "http", Host: fmt.Sprintf("localhost:%s", port)})
 
-	go startServer("8081")
-	go startServer("8082")
+		// TODO:create cancellable context, that gets called when load balancer quits
+		go startServer(port)
+	}
 
 	lb := &loadBalancer{
 		backends: backends,
